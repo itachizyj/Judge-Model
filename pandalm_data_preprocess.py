@@ -13,7 +13,7 @@ def checkPandaLMData():
             out_dict = {}
             line = data["input_sequence"] + data["output_sequence"]
             args = line.split("###")
-            prompt = args[0][:-2]
+            # prompt = args[0][:-2]
             instruction = args[1][14:][:-2]
             if len(args) == 7:
                 input = ""
@@ -29,9 +29,6 @@ def checkPandaLMData():
                 evaluation = args[5][13:][:-2]
                 reason = args[6][9:][:-2]
                 # reference = args[7][12:][:-1]
-            if evaluation == 'Tie':
-                print('t')
-            #     cnt += 1
             if len(instruction) > 147 or len(response_1) > 815 or len(response_2) > 819 or len(reason) > 292 or len(
                     input) > 494:
                 continue
