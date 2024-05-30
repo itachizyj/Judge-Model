@@ -35,7 +35,7 @@ def generate_response():
             cnt_correct_Tie = 0
             cnt_entry = 0
             for data in datas:
-                cnt_entry+=1
+                cnt_entry += 1
                 input = data['input']
                 if input == "":
                     prompt = "Below are two responses for a given task. The task is defined by the Instruction. Evaluate the responses and generate a reference answer for the task.Please ensure the evaluation and reason are consistent upon repeated inquiries."
@@ -80,17 +80,47 @@ def generate_response():
                     "prompt": input_tokens,
                     "stream": False
                 }
-                http_response = requests.post(url, headers=headers, data=json.dumps(ollama_input))
 
-                if http_response.status_code == 200:
+                # 连续生成三次取较多这者，三次均不同记作Tie
+                gens = []
+                for i in range(3):
+                    http_response = requests.post(url, headers=headers, data=json.dumps(ollama_input))
                     text = http_response.text
                     all_data = json.loads(text)
                     answer = all_data['response']  # answer 为模型生成的答案
+                    items = answer.split('###')
+                    gen_ans = items[0].strip()
+                    gens.append(gen_ans)
+                cnt_1 = 0
+                cnt_2 = 0
+                cnt_tie = 0
+                for vote in gens:
+                    if vote == '1':
+                        cnt_1 += 1
+                    elif vote == '2':
+                        cnt_2 += 1
+                    else:
+                        cnt_tie += 1
+                if cnt_1 >= 2:
+                    gen_ans = "1"
+                elif cnt_2 >= 2:
+                    gen_ans = "2"
                 else:
-                    print("error", http_response.text)
-                # 比较生成的答案和标准答案，并统计数据
-                items = answer.split('###')
-                gen_ans = items[0].strip()
+                    gen_ans = "Tie"
+
+
+                # # 只生成一次，直接作为结果
+                # http_response = requests.post(url, headers=headers, data=json.dumps(ollama_input))
+                # if http_response.status_code == 200:
+                #     text = http_response.text
+                #     all_data = json.loads(text)
+                #     answer = all_data['response']  # answer 为模型生成的答案
+                # else:
+                #     print("error", http_response.text)
+                # # 比较生成的答案和标准答案，并统计数据
+                # items = answer.split('###')
+                # gen_ans = items[0].strip()
+
 
                 if gen_ans == "1":
                     gen_cnt_1 += 1
@@ -98,7 +128,6 @@ def generate_response():
                     gen_cnt_2 += 1
                 else:
                     gen_cnt_Tie += 1
-                    
                 if gen_ans == standard_ans:
                     cnt_correct += 1
                     if standard_ans == "1":
