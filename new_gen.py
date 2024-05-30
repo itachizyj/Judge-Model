@@ -3,7 +3,7 @@ import requests
 import json
 
 url = "http://localhost:11434/api/generate"  # 11434端口为ollama默认监听端口
-progress_bar = tqdm(total=999)
+progress_bar = tqdm(total=993)
 headers = {
     "Content-Type": "application/json"
 }
@@ -27,10 +27,15 @@ def generate_response():
             total_cnt_1 = 0
             total_cnt_2 = 0
             total_cnt_Tie = 0
+            gen_cnt_1 = 0
+            gen_cnt_2 = 0
+            gen_cnt_Tie = 0
             cnt_correct_1 = 0
             cnt_correct_2 = 0
             cnt_correct_Tie = 0
+            cnt_entry = 0
             for data in datas:
+                cnt_entry+=1
                 input = data['input']
                 if input == "":
                     prompt = "Below are two responses for a given task. The task is defined by the Instruction. Evaluate the responses and generate a reference answer for the task.Please ensure the evaluation and reason are consistent upon repeated inquiries."
@@ -85,7 +90,15 @@ def generate_response():
                     print("error", http_response.text)
                 # 比较生成的答案和标准答案，并统计数据
                 items = answer.split('###')
-                gen_ans = items[0][:-1]
+                gen_ans = items[0].strip()
+
+                if gen_ans == "1":
+                    gen_cnt_1 += 1
+                elif gen_ans == "2":
+                    gen_cnt_2 += 1
+                else:
+                    gen_cnt_Tie += 1
+                    
                 if gen_ans == standard_ans:
                     cnt_correct += 1
                     if standard_ans == "1":
@@ -102,22 +115,28 @@ def generate_response():
                 out.write("---------------------------------------------------\n")
                 print("standard_ans: \t" + standard_ans)
                 out.write("standard_ans: \t" + standard_ans + "\n")
+                print("gen_ans: \t" + gen_ans)
+                out.write("gen_ans: \t" + gen_ans + "\n")
                 print("cnt_error: \t" + str(cnt_error))
                 out.write("cnt_error: \t" + str(cnt_error) + "\n")
                 print("cnt_correct_1:\t" + str(cnt_correct_1) + "\tcnt_correct_2:\t" + str(
                     cnt_correct_2) + "\tcnt_correct_Tie:\t" + str(cnt_correct_Tie))
                 out.write("cnt_correct_1:\t" + str(cnt_correct_1) + "\tcnt_correct_2:\t" + str(
                     cnt_correct_2) + "\tcnt_correct_Tie:\t" + str(cnt_correct_Tie) + "\n")
+                print("gen_cnt_1:\t" + str(gen_cnt_1) + "\tgen_cnt_2:\t" + str(
+                    gen_cnt_2) + "\tgen_cnt_Tie:\t" + str(gen_cnt_Tie))
+                out.write("gen_cnt_1:\t" + str(gen_cnt_1) + "\tgen_cnt_2:\t" + str(
+                    gen_cnt_2) + "\tgen_cnt_Tie:\t" + str(gen_cnt_Tie) + "\n")
                 print("total_cnt_1:\t" + str(total_cnt_1) + "\ttotal_cnt_2:\t" + str(
                     total_cnt_2) + "\ttotal_cnt_Tie:\t" + str(
                     total_cnt_Tie))
                 out.write("total_cnt_1:\t" + str(total_cnt_1) + "\ttotal_cnt_2:\t" + str(
                     total_cnt_2) + "\ttotal_cnt_Tie:\t" + str(
                     total_cnt_Tie) + "\n")
-                print("correct:\t" + str(cnt_correct) + "\ttotal:\t" + str(idx + 1) + "\tcorrect_rate: " + str(
-                    cnt_correct / (idx + 1)))
-                out.write("correct:\t" + str(cnt_correct) + "\ttotal:\t" + str(idx + 1) + "\tcorrect_rate: " + str(
-                    cnt_correct / (idx + 1)) + "\n")
+                print("correct:\t" + str(cnt_correct) + "\ttotal:\t" + str(cnt_entry) + "\tcorrect_rate: " + str(
+                    cnt_correct / (cnt_entry)))
+                out.write("correct:\t" + str(cnt_correct) + "\ttotal:\t" + str(cnt_entry) + "\tcorrect_rate: " + str(
+                    cnt_correct / (cnt_entry)) + "\n")
                 print("---------------------------------------------------")
                 out.write("---------------------------------------------------\n")
                 progress_bar.update(1)  # 更新tqdm进度条
